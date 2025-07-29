@@ -30,65 +30,17 @@ Pierre Cossard contributed the code for multi-threading on the Mac using GDS.
 Soren Hein made a number of contributions before becoming a co-author starting with v2.8 in 2014.
 
 
-Overview
+Fork Overview
 ========
 
-The distribution consists of the following directories.
+This is a fork of the original repository [dds](https://github.com/dds-bridge/dds/tree/develop) and provides a wrapper on top of the original functions.
 
-* **src**, the source code for the library.
-* **include**, where the public interface of the library is specified.
-* **lib**, the place where the library file is "installed" for test purposes.
-* **doc**, where the library interface is documented and the algorithms behind DDS are explained at a high level.
-* **hands**, a repository for input files to the test programs.
-* **test**, a test program.
-* **examples**, some minimal programs showing how to interface in practice with a number of library functions.
+This wrapper utilizes the emscripten library to compile the functions to WebAssembly. This allows the calculation functions to be utilized in the browser by a client.
+This fork also provides transformation wrapper functions on top of the original package functions to allow for more abstraction from the client.
 
-There is a parallel distribution, [**ddd**](https://github.com/dds-bridge/ddd).  It consisting of an old driver program for DDS contributed under the GPL (not under the Apache license) by Flip Cronje, and updated by us to support the multi-threaded library file.
-
-If you install ddd manually, put it in a directory parallel to these directories (src etc.) and then read the README file in that directory.  If you use GitHub, then dds is a sub-module.
-
-
-Supported systems
-=================
-The DLLs work out of the box on Windows systems.  There is a single-threaded version for old Windows versions, and there is a multi-threaded version that works on all modern Windows systems.  This is the one you should use if in doubt.  
-
-The distributed Windows DLL uses Windows multi-threading.  The code compiles on windows (see INSTALL) with at least:
-
-* Visual C++ 2010 Express editions or later.
-* The TDM-GCC/Mingw port of g++.
-* g++ on Cygwin.
-
-We have also compiled the code and/or had help from other contributors on the following systems.
-
-* Linux Ubuntu with g++ and with OpenMP multi-threading.
-* Mac OS 10.9 with g++ and with OpenMP multi-threading.  Also with clang without multi-threading.  Also with GCD multi-threading compiling with LLVM.
-
-Here the libraries are `.a` files, not DLLs.  There are also Makefiles for shared libraries available.
-
-Note that Apple stopped using g++ in Xcode a while back, DDS does compile using the clang compiler, but since DDS does not support pthreads multi-threading, DDS becomes single-threaded.  To get OpenMP multi-threading you need to use the Homebrew installer and do:
-
-    brew reinstall gcc --without-multilib
-
-The `without-multilib` is important because you won't get OpenMP otherwise, and that's the whole point.  *(Thanks to Matthew Kidd for these instructions.)*
-
-Thanks for Pierre Cossard's contribution, the Mac port now also supports GCD multi-threading with LLVM.
-
-There's an example .Net wrapper on https://github.com/anorsich/dds.net (not supported by us).
-
-Usage
-=====
-
-DDS tries to figure out the available number of cores and the available memory.  Based on this, DDS calculates a reasonable number of threads to use.  The user can override this by calling the `SetMaxThreads()` or the `SetResources()` function.  In principle these functions can be called multiple times, but there is overhead associated with this, so only call it at the beginning of your program unless you really want to change the number of threads dynamically.
-
-DDS on Windows calls SetMaxThreads itself when it is attached to a process, so you don't have to.  On Unix-like systems we use an equivalent mechanism, but we have had a report that this does not always happen in the right order of things, so you may want to call SetMaxThreads explicitly.
-
-Docs
-====
-The DDS library interface is documented. You find the docs, including a Markdown version which you can read online, in the /doc folder.  The Markdown version has not been updated since v2.8.4.
-
-Bugs
-====
-Version 2.9.0 has no known bugs.
-
-Please report bugs to bo.haglund@bahnhof.se and soren.hein@gmail.com.
+The [Emscripten package](https://emscripten.org/docs/getting_started/downloads.html) must also be downloaded and configured to compile and use the wrapper with WebAssembly
+The compilation can be done using the below command:
+```
+emcc -sINITIAL_MEMORY=52428800 -sNO_EXIT_RUNTIME=1 -sEXPORTED_FUNCTIONS="_free,_malloc,_do_dds_solve_board, _dds_init" -sEXPORTED_RUNTIME_METHODS="getValue,ccall,allocateUTF8" -sEXPORT_ES6=1 -sMODULARIZE=1 src/dds.cpp src/dump.cpp src/ABsearch.cpp src/ABstats.cpp src/CalcTables.cpp src/DealerPar.cpp src/File.cpp src/Init.cpp src/LaterTricks.cpp src/Memory.cpp src/Moves.cpp src/Par.cpp src/PlayAnalyser.cpp src/PBN.cpp src/QuickTricks.cpp src/Scheduler.cpp src/SolveBoard.cpp src/SolverIF.cpp src/System.cpp src/ThreadMgr.cpp src/Timer.cpp src/TimerGroup.cpp src/TimerList.cpp src/TimeStat.cpp src/TimeStatList.cpp src/TransTableS.cpp src/TransTableL.cpp src/DDSWrapper.c -I./include -I./src -o dds.js
+```
 
